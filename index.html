@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Klah Klok</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;700&family=Paytone+One&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --panel: rgba(11, 26, 23, 0.78);
+            --card: rgba(255, 255, 255, 0.1);
+            --line: rgba(255, 255, 255, 0.2);
+            --text: #f6fff6;
+            --gold: #ffd166;
+            --green: #1bbf66;
+            --red: #e94f37;
+            --cyan: #6fe4ff;
+            --tab: rgba(255, 255, 255, 0.12);
+            --tab-active: linear-gradient(135deg, #ffe08a, #64dfdf);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Kantumruy Pro", sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            background: radial-gradient(circle at 15% 10%, #2d7f67, #0c2c2f 45%, #05161a);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.44), rgba(0, 0, 0, 0.68)), url("bg.png");
+            background-size: cover;
+            background-position: center;
+            opacity: 0.86;
+            z-index: -2;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 20% 20%, rgba(255, 209, 102, 0.22), transparent 35%), radial-gradient(circle at 80% 80%, rgba(111, 228, 255, 0.17), transparent 33%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .app {
+            width: min(1320px, 94vw);
+            margin: 2rem auto;
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: 260px 1fr 260px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            backdrop-filter: blur(7px);
+            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel-title {
+            margin: 0;
+            font-family: "Paytone One", sans-serif;
+            letter-spacing: 0.05em;
+            color: var(--gold);
+            font-size: 1.2rem;
+        }
+
+        .board {
+            padding: 1rem;
+        }
+
+        .symbol-grid {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+
+        .symbol-card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 12px;
+            padding: 0.7rem 0.55rem;
+            text-align: center;
+            transition: 0.2s transform ease;
+        }
+
+        .symbol-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .symbol-icon {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 0.28rem;
+        }
+
+        .center {
+            padding: 1.1rem;
+        }
+
+        .game-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            margin: 0;
+            font-family: "Paytone One", sans-serif;
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            letter-spacing: 0.06em;
+            color: #fff4dc;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 0.65rem 0.95rem;
+            font-size: 0.95rem;
+            font-family: inherit;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.18s transform ease, 0.18s filter ease;
+        }
+
+        button:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #ffe08a, #ffb703);
+            color: #2f2100;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #98f5e1, #64dfdf);
+            color: #023047;
+        }
+
+        .dice-zone {
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            padding: 0.8rem;
+        }
+
+        .dice-zone h3 {
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            color: var(--cyan);
+            font-weight: 700;
+        }
+
+        .dice-row {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        .die {
+            width: 120px;
+            height: 120px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            font-size: 2.1rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: inset 0 -5px 8px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .die-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: inherit;
+        }
+
+        .betting-wrap {
+            margin-top: 1rem;
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .tabs-bar {
+            display: flex;
+            gap: 0.55rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            scrollbar-width: thin;
+        }
+
+        .tabs-bar::-webkit-scrollbar {
+            height: 7px;
+        }
+
+        .tabs-bar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+        }
+
+        .player-tab {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            background: var(--tab);
+            color: var(--text);
+            padding: 0.5rem 0.85rem;
+            min-width: max-content;
+            line-height: 1.12;
+            text-align: left;
+            display: grid;
+            gap: 0.15rem;
+            box-shadow: 0 0 0 rgba(111, 228, 255, 0);
+        }
+
+        .player-tab.active {
+            background: var(--tab-active);
+            color: #102126;
+            border-color: #ffe08a;
+            box-shadow: 0 0 20px rgba(111, 228, 255, 0.34);
+        }
+
+        .tab-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .tab-bet {
+            font-size: 0.78rem;
+            opacity: 0.9;
+        }
+
+        .add-tab {
+            border-radius: 999px;
+            border: 1px dashed rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.08);
+            color: #d8f6ff;
+            font-size: 1.15rem;
+            min-width: 46px;
+            padding: 0.45rem 0.9rem;
+        }
+
+        .player-bet {
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 0.8rem;
+            animation: fadeSwitch 0.28s ease;
+        }
+
+        @keyframes fadeSwitch {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.992);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .player-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.6rem;
+        }
+
+        .player-head strong {
+            font-size: 1.05rem;
+        }
+
+        .balance {
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .player-meta {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-remove-player {
+            background: linear-gradient(135deg, #ff8b79, #e94f37);
+            color: #2a0600;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.82rem;
+            border-radius: 8px;
+        }
+
+        .pick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+
+        .pick {
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text);
+            height: 150px;
+            overflow: hidden;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 700;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .pick-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .pick.selected {
+            background: linear-gradient(135deg, #ffd166, #ff9f1c);
+            border-color: #ffb703;
+            color: #1f1302;
+        }
+
+        .bet-inputs {
+            margin-top: 0.6rem;
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .bet-input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.4rem 0.5rem;
+            border-radius: 8px;
+        }
+
+        .bet-input-row span {
+            min-width: 56px;
+            font-weight: 700;
+        }
+
+        .app input[type="text"],
+        .app input[type="number"] {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 0.48rem 0.55rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .app input::placeholder {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .side-panel {
+            padding: 1rem;
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .summary-list {
+            display: grid;
+            gap: 0.45rem;
+            max-height: 58vh;
+            overflow: auto;
+        }
+
+        .summary-row {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            padding: 0.45rem 0.55rem;
+            display: grid;
+            gap: 0.1rem;
+        }
+
+        .summary-row strong {
+            color: #fff2c9;
+            font-size: 0.95rem;
+        }
+
+        .summary-row small {
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .hint {
+            margin: 0;
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .swal2-popup {
+            background: #0a2c2f;
+            color: #f0fff3;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 16px;
+        }
+
+        .result-list {
+            text-align: left;
+            margin-top: 0.8rem;
+            display: grid;
+            gap: 0.35rem;
+            font-size: 0.96rem;
+        }
+
+        .result-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.25rem 0.7rem;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            padding: 0.45rem 0.6rem;
+        }
+
+        .result-item .ri-name {
+            font-weight: 700;
+            color: #ecfff1;
+        }
+
+        .result-item .ri-net {
+            font-weight: 800;
+            text-align: right;
+        }
+
+        .result-item .ri-balance {
+            grid-column: 1 / -1;
+            font-size: 0.86rem;
+            color: rgba(240, 255, 243, 0.86);
+        }
+
+        .result-item .ri-picked {
+            grid-column: 1 / -1;
+            font-size: 0.86rem;
+            color: rgba(208, 215, 79, 0.92);
+        }
+
+        .result-item.win {
+            color: #64f58d;
+            font-weight: 700;
+        }
+
+        .result-item.lose {
+            color: #ff7f70;
+            font-weight: 700;
+        }
+
+        .result-item.even {
+            color: #cce2f2;
+            font-weight: 700;
+        }
+
+        .khm {
+            font-family: "Kantumruy Pro", sans-serif;
+        }
+
+        .dice-inline {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin: 0.2rem 0 0.5rem;
+        }
+
+        .result-dice-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        @media (max-width: 1120px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .board {
+                order: 2;
+            }
+
+            .center {
+                order: 1;
+            }
+
+            .side-panel {
+                order: 3;
+            }
+
+            .summary-list {
+                max-height: 260px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .pick-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .die {
+                width: 110px;
+                height: 110px;
+                font-size: 1.9rem;
+            }
+
+            .die-image {
+                width: 100%;
+                height: 100%;
+            }
+
+            .player-tab {
+                padding: 0.44rem 0.72rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app khm">
+        <section class="panel board">
+            <h2 class="panel-title khm">ផ្ទាំងហ្គេម</h2>
+            <div class="symbol-grid" id="boardSymbols"></div>
+        </section>
+
+        <section class="panel center">
+            <div class="game-head">
+                <div>
+                    <h1 class="logo">KLAH KLOK</h1>
+                    <div class="hint">Power by: Raksmey</div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-start khm" id="startGameBtn">ចាប់ផ្តើម</button>
+                    <button class="btn-reset khm" id="resetGameBtn">លុបទាំងអស់</button>
+                </div>
+            </div>
+
+            <div class="dice-zone">
+                <h3>លទ្ធផលគ្រាប់</h3>
+                <div class="dice-row" id="diceRow">
+                    <div class="die">❔</div>
+                    <div class="die">❔</div>
+                    <div class="die">❔</div>
+                </div>
+            </div>
+
+            <div class="betting-wrap">
+                <div class="tabs-bar" id="tabsBar"></div>
+                <div id="activePlayerView"></div>
+            </div>
+        </section>
+
+        <aside class="panel side-panel">
+            <h2 class="panel-title khm">អ្នកលេង</h2>
+            <p class="hint" style="line-height: 1.7em;">ប្រើប៊ូតុង <strong>+</strong> ដើម្បីបន្ថែមអ្នកលេង។
+                ចុចលើឈ្មោះអ្នកលេងដើម្បីចាក់ KLAHKLOK</p>
+            <div class="summary-list" id="membersList"></div>
+            <div class="hint" id="playerCountHint"></div>
+            <div class="hint">អ្នកលេងនីមួយៗចាប់ផ្តើមពី 0 រៀល។</div>
+
+        </aside>
+    </main>
+
+    <script>
+        const symbols = [
+            { key: "tiger", image: "tiger.png", label: "ខ្លា" },
+            { key: "jar", image: "gourd.png", label: "ខ្លោក" },
+            { key: "rooster", image: "chicken.png", label: "មាន់" },
+            { key: "crab", image: "crab.png", label: "ក្តាម" },
+            { key: "fish", image: "fish.png", label: "ត្រី" },
+            { key: "shrimp", image: "shrimp.png", label: "បង្កង" }
+        ];
+
+        const STORAGE_KEY = "klah-klok-tab-state-v1";
+        const initialBalance = 0;
+        const players = [];
+        let activePlayerId = "";
+        let isRolling = false;
+
+        const boardSymbols = document.getElementById("boardSymbols");
+        const membersList = document.getElementById("membersList");
+        const playerCountHint = document.getElementById("playerCountHint");
+        const tabsBar = document.getElementById("tabsBar");
+        const activePlayerView = document.getElementById("activePlayerView");
+        const startGameBtn = document.getElementById("startGameBtn");
+        const resetGameBtn = document.getElementById("resetGameBtn");
+        const diceRow = document.getElementById("diceRow");
+
+        function buildBoard() {
+            boardSymbols.innerHTML = symbols
+                .map((s) => `
+                    <div class="symbol-card">
+                        <img class="symbol-icon" src="${s.image}" alt="${escapeHtml(s.label)}" />
+                        <span>${s.label}</span>
+                    </div>
+                `)
+                .join("");
+        }
+
+        function createPlayer(name) {
+            return {
+                id: Date.now() + Math.random().toString(16).slice(2),
+                name,
+                balance: initialBalance,
+                selected: [],
+                bets: {}
+            };
+        }
+
+        function saveState() {
+            try {
+                const state = {
+                    players,
+                    activePlayerId
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (error) {
+                console.warn("Unable to save game state:", error);
+            }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+
+                const parsed = JSON.parse(raw);
+                if (!parsed || !Array.isArray(parsed.players)) return;
+
+                const validSymbolKeys = new Set(symbols.map((s) => s.key));
+                const restored = parsed.players
+                    .map((p) => {
+                        if (!p || typeof p.name !== "string") return null;
+                        const id = typeof p.id === "string" || typeof p.id === "number" ? String(p.id) : Date.now() + Math.random().toString(16).slice(2);
+                        const name = p.name.trim();
+                        if (!name) return null;
+
+                        const selected = Array.isArray(p.selected)
+                            ? [...new Set(p.selected.filter((key) => validSymbolKeys.has(key)))].slice(0, 2)
+                            : [];
+
+                        const bets = {};
+                        const sourceBets = p.bets && typeof p.bets === "object" ? p.bets : {};
+                        selected.forEach((key) => {
+                            const amount = Number(sourceBets[key]);
+                            if (amount > 0) {
+                                bets[key] = Math.floor(amount);
+                            }
+                        });
+
+                        const balance = Number.isFinite(Number(p.balance)) ? Math.max(0, Math.floor(Number(p.balance))) : initialBalance;
+
+                        return {
+                            id,
+                            name,
+                            balance,
+                            selected,
+                            bets
+                        };
+                    })
+                    .filter(Boolean);
+
+                players.push(...restored);
+                if (typeof parsed.activePlayerId === "string") {
+                    activePlayerId = parsed.activePlayerId;
+                }
+            } catch (error) {
+                console.warn("Unable to load game state:", error);
+            }
+        }
+
+        function getPlayerTotalBet(player) {
+            return player.selected.reduce((sum, key) => sum + Number(player.bets[key] || 0), 0);
+        }
+
+        async function addPlayerFromPrompt() {
+            if (isRolling) return;
+            const result = await Swal.fire({
+                title: "បន្ថែមអ្នកលេង",
+                input: "text",
+                inputPlaceholder: "បញ្ចូលឈ្មោះអ្នកលេង",
+                inputAttributes: { maxlength: 30, autocapitalize: "off" },
+                showCancelButton: true,
+                confirmButtonText: "បន្ថែម",
+                inputValidator: (value) => {
+                    const name = (value || "").trim();
+                    if (!name) return "សូមបញ្ចូលឈ្មោះ។";
+                    if (players.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+                        return "ឈ្មោះនេះមានរួចហើយ។";
+                    }
+                    return undefined;
+                }
+            });
+
+            if (!result.isConfirmed) return;
+            const name = result.value.trim();
+            const player = createPlayer(name);
+            players.push(player);
+            activePlayerId = player.id;
+            render();
+        }
+
+        function renderMembersSummary() {
+            membersList.innerHTML = players.length
+                ? players
+                    .map((p) => {
+                        const totalBet = getPlayerTotalBet(p);
+                        return `
+                        <div class="summary-row" style="line-height: 1.3em;">
+                            <strong>${escapeHtml(p.name)}</strong>
+                            <small>លុយឈ្នះ: ${p.balance} រៀល</small>
+                            <small>ប្រាក់ភ្នាល់បច្ចុប្បន្ន: ${totalBet} រៀល</small>
+                        </div>
+                    `;
+                    })
+                    .join("")
+                : `<p class="hint">មិនទាន់មានអ្នកលេង។</p>`;
+
+            playerCountHint.textContent = `ចំនួនអ្នកលេង: ${players.length} នាក់`;
+        }
+
+        function renderTabs() {
+            const tabs = players
+                .map((p) => {
+                    const isActive = p.id === activePlayerId;
+                    const totalBet = getPlayerTotalBet(p);
+                    return `
+                    <button type="button" class="player-tab ${isActive ? "active" : ""}" data-tab-player-id="${p.id}">
+                        <span class="tab-name">${escapeHtml(p.name)}</span>
+                        <span class="tab-bet">ភ្នាល់: ${totalBet}</span>
+                    </button>
+                `;
+                })
+                .join("");
+
+            tabsBar.innerHTML = `${tabs}<button type="button" class="add-tab" id="addTabBtn" title="បន្ថែមអ្នកលេង">+</button>`;
+        }
+
+        function renderActivePlayer() {
+            const player = players.find((p) => p.id === activePlayerId);
+            if (!player) {
+                activePlayerView.innerHTML = `<article class="player-bet"><p class="hint">ប្រើប៊ូតុង + ដើម្បីបន្ថែមអ្នកលេង។</p></article>`;
+                return;
+            }
+
+            const pickButtons = symbols
+                .map((s) => {
+                    const selectedClass = player.selected.includes(s.key) ? "selected" : "";
+                    return `
+                    <button
+                        type="button"
+                        class="pick ${selectedClass}"
+                        data-player-id="${player.id}"
+                        data-symbol="${s.key}"
+                    ><img class="pick-icon" src="./${s.image}" alt="${escapeHtml(s.label)}" /></button>
+                `;
+                })
+                .join("");
+
+            const betInputs = player.selected
+                .map((key) => {
+                    const symbol = symbols.find((s) => s.key === key);
+                    const val = player.bets[key] ?? "";
+                    return `
+                    <label class="bet-input-row">
+                        <span>${symbol.label}</span>
+                        <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            placeholder="រៀល"
+                            value="${val}"
+                            data-bet-player-id="${player.id}"
+                            data-bet-symbol="${key}"
+                        />
+                    </label>
+                `;
+                })
+                .join("");
+
+            activePlayerView.innerHTML = `
+                <article class="player-bet">
+                    <div class="player-head">
+                        <strong>${escapeHtml(player.name)}</strong>
+                        <div class="player-meta">
+                            
+                            <button type="button" class="btn-remove-player khm" id="removePlayerBtn" data-remove-player-id="${player.id}">លុប</button>
+                        </div>
+                    </div>
+                    <div class="pick-grid">${pickButtons}</div>
+                    <div class="bet-inputs">${betInputs}</div>
+                </article>
+            `;
+        }
+
+        function renderDice(values = [null, null, null]) {
+            diceRow.innerHTML = values.map((v) => {
+                if (v && typeof v === "object" && v.image) {
+                    return `<div class="die"><img class="die-image" src="${v.image}" alt="${escapeHtml(v.label)}" /></div>`;
+                }
+                return `<div class="die">❔</div>`;
+            }).join("");
+        }
+
+        function ensureActivePlayer() {
+            if (players.length && !players.some((p) => p.id === activePlayerId)) {
+                activePlayerId = players[0].id;
+            }
+            if (!players.length) {
+                activePlayerId = "";
+            }
+        }
+
+        function render() {
+            ensureActivePlayer();
+            renderMembersSummary();
+            renderTabs();
+            renderActivePlayer();
+            saveState();
+        }
+
+        async function removePlayer(playerId) {
+            if (isRolling) return;
+            const player = players.find((p) => p.id === playerId);
+            if (!player) return;
+
+            const confirm = await Swal.fire({
+                title: `លុប ${escapeHtml(player.name)} ?`,
+                text: "អ្នកលេងនេះ និងការភ្នាល់បច្ចុប្បន្នទាំងអស់នឹងត្រូវលុប។",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "លុប"
+            });
+
+            if (!confirm.isConfirmed) return;
+            const index = players.findIndex((p) => p.id === playerId);
+            if (index > -1) {
+                players.splice(index, 1);
+            }
+            if (activePlayerId === playerId) {
+                activePlayerId = players[0] ? players[0].id : "";
+            }
+            render();
+        }
+
+        function toggleSymbol(playerId, symbolKey) {
+            const player = players.find((p) => p.id === playerId);
+            if (!player) return;
+
+            const idx = player.selected.indexOf(symbolKey);
+            if (idx > -1) {
+                player.selected.splice(idx, 1);
+                delete player.bets[symbolKey];
+            } else {
+                if (player.selected.length >= 2) {
+                    Swal.fire("ដល់កម្រិត", "អ្នកលេងម្នាក់អាចជ្រើសបានអតិបរមា 2 សញ្ញា។", "info");
+                    return;
+                }
+                player.selected.push(symbolKey);
+            }
+            render();
+        }
+
+        function updateBet(playerId, symbolKey, amountRaw) {
+            const player = players.find((p) => p.id === playerId);
+            if (!player) return;
+
+            const amount = Number(amountRaw);
+            if (!amountRaw) {
+                delete player.bets[symbolKey];
+                renderTabs();
+                renderMembersSummary();
+                return;
+            }
+
+            if (Number.isNaN(amount) || amount < 1) {
+                player.bets[symbolKey] = 0;
+                renderTabs();
+                renderMembersSummary();
+                return;
+            }
+
+            player.bets[symbolKey] = Math.floor(amount);
+
+            renderTabs();
+            renderMembersSummary();
+        }
+
+        function randomSymbol() {
+            return symbols[Math.floor(Math.random() * symbols.length)];
+        }
+
+        function rollDice() {
+            return [randomSymbol(), randomSymbol(), randomSymbol()];
+        }
+
+        function countMatches(dice, symbolKey) {
+            return dice.filter((d) => d.key === symbolKey).length;
+        }
+
+        function validateAllBets() {
+            if (!players.length) {
+                return "សូមបន្ថែមអ្នកលេងយ៉ាងហោចណាស់ម្នាក់។";
+            }
+
+            for (const player of players) {
+                if (!player.selected.length) {
+                    return `${player.name} មិនទាន់ជ្រើសសញ្ញា។`;
+                }
+                if (player.selected.length > 2) {
+                    return `${player.name} ជ្រើសលើស 2 សញ្ញា។`;
+                }
+
+                let totalBet = 0;
+                for (const key of player.selected) {
+                    const amount = Number(player.bets[key]);
+                    if (!amount || amount <= 0) {
+                        const sym = symbols.find((s) => s.key === key);
+                        return `${player.name} ត្រូវដាក់ប្រាក់ភ្នាល់ > 0 សម្រាប់ ${sym.label}។`;
+                    }
+                    totalBet += amount;
+                }
+
+            }
+
+            return "";
+        }
+
+        async function startGame() {
+            if (isRolling) return;
+
+            const errorMessage = validateAllBets();
+            if (errorMessage) {
+                Swal.fire("មិនអាចចាប់ផ្តើមបាន", errorMessage, "error");
+                return;
+            }
+
+            isRolling = true;
+            startGameBtn.disabled = true;
+
+            const anim = setInterval(() => {
+                const temp = rollDice();
+                renderDice(temp);
+            }, 100);
+
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            clearInterval(anim);
+            const finalDice = rollDice();
+            renderDice(finalDice);
+
+            const results = players.map((player) => {
+                const totalWin = player.selected.reduce((sum, key) => {
+                    const matchCount = countMatches(finalDice, key);
+                    const betAmount = Number(player.bets[key] || 0);
+                    return sum + matchCount * betAmount;
+                }, 0);
+
+                const pickedLabels = player.selected
+                    .map((key) => symbols.find((s) => s.key === key)?.label)
+                    .filter(Boolean)
+                    .join(", ");
+
+                const net = totalWin;
+                player.balance += net;
+
+                return {
+                    name: player.name,
+                    net,
+                    balance: player.balance,
+                    pickedLabels
+                };
+            });
+
+            const resultHtml = `
+                <div>
+                    <h3 style="margin:0;color:#ffd166;">លទ្ធផលគ្រាប់</h3>
+                    <div class="dice-inline">${finalDice.map((d) => `<img class="result-dice-image" src="${d.image}" alt="${escapeHtml(d.label)}" />`).join("")}</div>
+                    <div class="result-list">
+                        ${results
+                    .map((r) => {
+                        const type = r.net > 0 ? "win" : r.net < 0 ? "lose" : "even";
+                        const prefix = r.net > 0 ? `បានឈ្នះ +${r.net} រៀល` : r.net < 0 ? `ចាញ់ ${r.net} រៀល` : "សូមចូលរួមសោកស្ដាយ";
+                        return `
+                            <div class="result-item ${type}">
+                                <span class="ri-name">${escapeHtml(r.name)}</span>
+                                <span class="ri-net">${prefix}</span>
+                                <span class="ri-balance">លុយសរុប: ${r.balance} រៀល</span>
+                                <span class="ri-picked">បានចាក់៖ ${escapeHtml(r.pickedLabels || "-")}</span>
+                            </div>
+                        `;
+                    })
+                    .join("")}
+                    </div>
+                </div>
+            `;
+
+            await Swal.fire({
+                title: "លទ្ធផលជុំ",
+                html: resultHtml,
+                icon: "success",
+                confirmButtonText: "ជុំបន្ទាប់"
+            });
+
+            players.forEach((p) => {
+                p.selected = [];
+                p.bets = {};
+            });
+
+            isRolling = false;
+            startGameBtn.disabled = false;
+            render();
+        }
+
+        async function resetGame() {
+            if (isRolling) return;
+            if (!players.length) {
+                renderDice();
+                return;
+            }
+
+            const confirm = await Swal.fire({
+                title: "កំណត់ហ្គេមឡើងវិញ?",
+                text: "វានឹងលុបអ្នកលេងទាំងអស់ និងកំណត់អ្វីៗទាំងអស់ឡើងវិញ។",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "បាទ/ចាស កំណត់ឡើងវិញ"
+            });
+
+            if (!confirm.isConfirmed) return;
+            players.length = 0;
+            activePlayerId = "";
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                console.warn("Unable to clear game state:", error);
+            }
+            renderDice();
+            render();
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        startGameBtn.addEventListener("click", startGame);
+        resetGameBtn.addEventListener("click", resetGame);
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" || e.repeat) return;
+
+            const target = e.target;
+            if (
+                target instanceof HTMLElement &&
+                (target.tagName === "INPUT" ||
+                    target.tagName === "TEXTAREA" ||
+                    target.isContentEditable)
+            ) {
+                return;
+            }
+
+            if (!isRolling && players.length > 0) {
+                startGameBtn.click();
+            }
+        });
+
+        tabsBar.addEventListener("click", (e) => {
+            const addBtn = e.target.closest("#addTabBtn");
+            if (addBtn) {
+                addPlayerFromPrompt();
+                return;
+            }
+
+            const tab = e.target.closest(".player-tab");
+            if (!tab) return;
+            activePlayerId = tab.dataset.tabPlayerId;
+            renderTabs();
+            renderActivePlayer();
+        });
+
+        activePlayerView.addEventListener("click", (e) => {
+            const removeBtn = e.target.closest("#removePlayerBtn");
+            if (removeBtn) {
+                removePlayer(removeBtn.dataset.removePlayerId);
+                return;
+            }
+
+            const btn = e.target.closest(".pick");
+            if (!btn) return;
+
+            const playerId = btn.dataset.playerId;
+            const symbolKey = btn.dataset.symbol;
+            toggleSymbol(playerId, symbolKey);
+        });
+
+        activePlayerView.addEventListener("input", (e) => {
+            const input = e.target.closest("input[data-bet-player-id]");
+            if (!input) return;
+
+            const playerId = input.dataset.betPlayerId;
+            const symbolKey = input.dataset.betSymbol;
+            updateBet(playerId, symbolKey, input.value);
+        });
+
+        loadState();
+        buildBoard();
+        render();
+        renderDice();
+    </script>
+</body>
+
+</html>
